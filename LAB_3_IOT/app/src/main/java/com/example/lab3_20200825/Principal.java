@@ -57,7 +57,8 @@ public class Principal extends AppCompatActivity {
                 if (!peliculaId.isEmpty()) {
                     // Intent para iniciar la actividad de búsqueda
                     Intent intent = new Intent(Principal.this, Buscar.class);
-                    intent.putExtra("PELICULA_ID", peliculaId); // Pasamos el ID a la actividad de búsqueda
+                    // Pasamos el ID a la actividad de búsqueda
+                    intent.putExtra("PELICULA_ID", peliculaId);
                     startActivity(intent);
                 } else {
                     // Mostrar un error si no se ingresó un ID

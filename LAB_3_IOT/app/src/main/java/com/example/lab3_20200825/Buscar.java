@@ -29,7 +29,7 @@ public class Buscar extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_buscar);
 
-        // Inicializar los AutoCompleteTextView y otros componentes aquí
+        // Inicializando los AutoCompleteTextView
         textViewTitulo = findViewById(R.id.textView4);
         autoCompleteDirector = findViewById(R.id.autoCompleteTextView3);
         autoCompleteActores = findViewById(R.id.autoCompleteTextView4);
@@ -47,7 +47,7 @@ public class Buscar extends AppCompatActivity {
         // Inicialmente el botón está deshabilitado
         buttonRegresar.setEnabled(false);
 
-        // Listener para el CheckBox
+        //  Para el CheckBox
         checkBoxConforme.setOnCheckedChangeListener((buttonView, isChecked) -> {
             // Habilita o deshabilita el botón Regresar según si el CheckBox está marcado
             buttonRegresar.setEnabled(isChecked);
@@ -61,7 +61,8 @@ public class Buscar extends AppCompatActivity {
                 // La siguiente línea asegura que se limpie la pila de actividades y se comience de nuevo en Principal.
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
-                finish(); // Cierra la actividad actual
+                // Cierra la actividad actual
+                finish();
             }
         });
 
@@ -79,7 +80,7 @@ public class Buscar extends AppCompatActivity {
                 .build();
 
         OMDbApiService apiService = retrofit.create(OMDbApiService.class);
-        // Reemplaza "tu_api_key" con tu clave de API de OMDb
+
         Call<Pelicula> call = apiService.obtenerPeliculaPorId("bf81d461", peliculaId);
 
         call.enqueue(new Callback<Pelicula>() {
@@ -95,9 +96,7 @@ public class Buscar extends AppCompatActivity {
                     autoCompleteGeneros.setText(pelicula.getGenre());
                     autoCompleteEscritores.setText(pelicula.getWriter());
                     autoCompleteTrama.setText(pelicula.getPlot());
-                    // Asumiendo que tienes getters para cada uno de los campos de Pelicula
 
-                    // Actualizar los ratings (necesitarás manejar el caso en que hay menos de 3 ratings)
                     if (pelicula.getRatings() != null) {
                         for (Pelicula.Rating rating : pelicula.getRatings()) {
                             switch (rating.getSource()) {
@@ -107,7 +106,7 @@ public class Buscar extends AppCompatActivity {
                                 case "Rotten Tomatoes":
                                     autoCompleteRottenTomatoes.setText(rating.getValue());
                                     break;
-                                // Puedes añadir más casos para otros tipos de fuentes si es necesario
+
                             }
                         }
                     }
@@ -117,7 +116,7 @@ public class Buscar extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Pelicula> call, Throwable t) {
-                // Maneja el caso de fallo en la llamada a la API (problema de red, etc.)
+               
             }
         });
 

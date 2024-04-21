@@ -6,7 +6,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,60 +26,39 @@ public class Visualizar extends AppCompatActivity {
 
     private TextView textViewPrimos;
     private int currentPrimeIndex = 0;
-    private List<Integer> primeNumbersList; // Asumiendo que tienes una lista de enteros
+    private List<Integer> primeNumbersList;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updatePrimeRunnable;
     private Button buttonToggleDirection;
     private Button buttonPauseResume;
     private boolean isAscending = true;
     private boolean isPaused = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_visualizar);
-        textViewPrimos = findViewById(R.id.textView16);
-        buttonToggleDirection = findViewById(R.id.button4); // Asegúrate de que este es el ID correcto en tu layout
-        buttonPauseResume = findViewById(R.id.button5);
-        updatePrimeRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (!isPaused && primeNumbersList != null && !primeNumbersList.isEmpty()) {
-                    textViewPrimos.setText("Su primo es: " + primeNumbersList.get(currentPrimeIndex));
-                    if (isAscending) {
-                        currentPrimeIndex = (currentPrimeIndex + 1) % primeNumbersList.size();
-                    } else {
-                        if (currentPrimeIndex == 0) {
-                            currentPrimeIndex = primeNumbersList.size() - 1;
-                        } else {
-                            currentPrimeIndex = (currentPrimeIndex - 1) % primeNumbersList.size();
-                        }
-                    }
-                    handler.postDelayed(this, 1000);
-                }
-            }
-        };
-        primeNumbersList = new ArrayList<>(); // Inicialización de la lista
-        Log.d("Visualizar", "Dirección cambiada. Es ascendente: " + isAscending);
-        buttonToggleDirection.setText(isAscending ? "Descender" : "Ascender");
 
-        // Establecer OnClickListener para el botón
+        textViewPrimos = findViewById(R.id.textView16);
+        buttonToggleDirection = findViewById(R.id.button4);
+        buttonPauseResume = findViewById(R.id.button5);
+        primeNumbersList = new ArrayList<>();
+
+        setupUpdatePrimeRunnable();
+
+        buttonToggleDirection.setText(isAscending ? "Descender" : "Ascender");
         buttonToggleDirection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Cambiar la dirección
                 cambiarDireccion();
             }
         });
+
         buttonPauseResume.setText(isPaused ? "Reiniciar" : "Pausar");
         buttonPauseResume.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isPaused = !isPaused;
-                buttonPauseResume.setText(isPaused ? "Reiniciar" : "Pausar");
-                if (!isPaused) {
-                    // Reinicia la actualización de los números primos
-                    handler.post(updatePrimeRunnable);
-                }
+                togglePauseResume();
             }
         });
 
@@ -91,7 +69,37 @@ public class Visualizar extends AppCompatActivity {
         }
     }
 
+    private void setupUpdatePrimeRunnable() {
+        updatePrimeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isPaused && primeNumbersList != null && !primeNumbersList.isEmpty()) {
+                    textViewPrimos.setText("Su primo es: " + primeNumbersList.get(currentPrimeIndex));
+                    currentPrimeIndex = isAscending ?
+                            (currentPrimeIndex + 1) % primeNumbersList.size() :
+                            (currentPrimeIndex - 1 + primeNumbersList.size()) % primeNumbersList.size();
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+    }
 
+    private void cambiarDireccion() {
+        isAscending = !isAscending;
+        buttonToggleDirection.setText(isAscending ? "Descender" : "Ascender");
+        Toast.makeText(this, "Dirección cambiada a " + (isAscending ? "ascendente" : "descendente"), Toast.LENGTH_SHORT).show();
+    }
+
+    private void togglePauseResume() {
+        isPaused = !isPaused;
+        if (!isPaused) {
+            handler.post(updatePrimeRunnable);
+            buttonPauseResume.setText("Pausar");
+        } else {
+            handler.removeCallbacks(updatePrimeRunnable);
+            buttonPauseResume.setText("Reiniciar");
+        }
+    }
 
     private void obtenerNumerosPrimos() {
         Retrofit retrofit = new Retrofit.Builder()
@@ -102,16 +110,15 @@ public class Visualizar extends AppCompatActivity {
         PrimeNumberService service = retrofit.create(PrimeNumberService.class);
         Call<List<PrimeNumber>> call = service.getPrimeNumbers(999, 1);
 
-        // Callback para Retrofit
+
         call.enqueue(new Callback<List<PrimeNumber>>() {
             @Override
             public void onResponse(Call<List<PrimeNumber>> call, Response<List<PrimeNumber>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<PrimeNumber> primeNumbers = response.body();
-                    // Aquí manejas la lista de objetos PrimeNumber
-                    // Ejemplo: comenzar a mostrar los números primos uno por uno
+
                     currentPrimeIndex = 0;
-                    mostrarPrimos(primeNumbers); // Llamar al método que muestra los primos
+                    mostrarPrimos(primeNumbers);
                 } else {
                     Toast.makeText(Visualizar.this, "Respuesta no exitosa", Toast.LENGTH_SHORT).show();
                 }
@@ -124,7 +131,6 @@ public class Visualizar extends AppCompatActivity {
         });
 
     }
-
     private void mostrarPrimos(List<PrimeNumber> primeNumbers) {
         handler.post(new Runnable() {
             @Override
@@ -134,7 +140,8 @@ public class Visualizar extends AppCompatActivity {
                     textViewPrimos.setText(String.format("Su primo es: %d", currentPrime.getNumber()));
                     handler.postDelayed(this, 1000);
                 } else {
-                    currentPrimeIndex = 0; // Reiniciar si llegamos al final de la lista
+                    // Reiniciar si llegamos al final de la lista
+                    currentPrimeIndex = 0;
                 }
             }
         });
@@ -142,29 +149,13 @@ public class Visualizar extends AppCompatActivity {
 
     private boolean isConnectedToInternet() {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-        }
-        return false;
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     @Override
     protected void onDestroy() {
-        handler.removeCallbacksAndMessages(null); // Cancelar todos los callbacks y mensajes
+        handler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
-    private void cambiarDireccion() {
-        // Cambiar el valor de la dirección
-        isAscending = !isAscending;
-        // Actualizar el mensaje mostrado
-        String direction = isAscending ? "ascendente" : "descendente";
-        // Mostrar el mensaje con la nueva dirección
-        Toast.makeText(this, "Dirección cambiada. Ahora es " + direction, Toast.LENGTH_SHORT).show();
-        // Asegurarse de que el índice esté correctamente posicionado
-        buttonToggleDirection.setText(isAscending ? "Descender" : "Ascender");
-    }
-
-
-
 }
