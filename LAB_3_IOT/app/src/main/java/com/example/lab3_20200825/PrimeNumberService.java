@@ -7,8 +7,8 @@ import retrofit2.http.GET;
 import retrofit2.http.Query;
 
 public interface PrimeNumberService {
-
-        @GET("/primeNumbers?len=999&order=1")
-        Call<List<Integer>> getPrimeNumbers();
-
+        @GET("/primeNumbers")
+        Call<List<PrimeNumber>> getPrimeNumbers(@Query("len") int length, @Query("order") int order);
 }
+
+
